@@ -196,9 +196,9 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
     );
     if (!mounted) return;
     setState(() {
-      _fixedKcal.text = config.fixedKcalGoal?.toString() ?? '';
-      _fixedFat.text = config.fixedFatGoalG?.toString() ?? '';
-      _cholesterol.text = config.cholesterolGoalMg?.toString() ?? '';
+      _fixedKcal.text = _manualGoalText(config.fixedKcalGoal);
+      _fixedFat.text = _manualGoalText(config.fixedFatGoalG);
+      _cholesterol.text = _manualGoalText(config.cholesterolGoalMg);
       _user = user;
       _fibre = today?.fibreGoal;
       _satFat = config.saturatedFatGoalG ?? today?.satFatGoal;
@@ -315,6 +315,9 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
     );
   }
 
+  static String _manualGoalText(double? value) =>
+      value?.toString().replaceFirst(RegExp(r'\.0$'), '') ?? '';
+
   static double? _parseGoal(String text) =>
       double.tryParse(text.trim().replaceAll(',', '.'));
 
@@ -324,13 +327,41 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
     String unit,
     String identifier,
   ) {
-    return Semantics(
-      identifier: identifier,
-      child: TextField(
-        controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(labelText: label, suffixText: unit),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final labelWidget = ExcludeSemantics(child: Text(label));
+        final field = Semantics(
+          identifier: identifier,
+          label: label,
+          child: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            textAlign: TextAlign.end,
+            decoration: InputDecoration(
+              suffixText: unit,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+            ),
+          ),
+        );
+        final fieldWidth = MediaQuery.textScalerOf(context).scale(124);
+        if (constraints.maxWidth < fieldWidth * 2.4) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [labelWidget, const SizedBox(height: 8), field],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: labelWidget),
+            const SizedBox(width: 16),
+            SizedBox(width: fieldWidth, child: field),
+          ],
+        );
+      },
     );
   }
 
@@ -419,13 +450,6 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          Semantics(
-            identifier: 'nutrient-goals-reset',
-            child: TextButton(
-              onPressed: _loaded && !_saving ? _resetAll : null,
-              child: Text(s.buttonResetLabel),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 0, 16, 0),
             child: Semantics(
@@ -450,36 +474,51 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
                 16 + MediaQuery.paddingOf(context).bottom,
               ),
               children: [
-                Text(
-                  s.settingsNutrientGoalsHint,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                Row(
                   children: [
-                    Text(s.settingsManualGoalsHint),
-                    _manualField(
-                      _fixedKcal,
-                      s.settingsFixedCaloriesGoal,
-                      'kcal',
-                      'fixed-calorie-goal',
+                    Expanded(
+                      child: Text(
+                        s.settingsManualGoalsTitle,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                     ),
-                    _manualField(
-                      _fixedFat,
-                      s.settingsFixedFatGoal,
-                      'g',
-                      'fixed-fat-goal',
+                    const SizedBox(width: 12),
+                    Semantics(
+                      identifier: 'nutrient-goals-reset',
+                      child: TextButton(
+                        onPressed: _saving ? null : _resetAll,
+                        child: Text(s.buttonResetLabel),
+                      ),
                     ),
-                    _manualField(
-                      _cholesterol,
-                      s.settingsCholesterolGoal,
-                      'mg',
-                      'cholesterol-goal',
-                    ),
-                    const SizedBox(height: 16),
                   ],
                 ),
+                Text(
+                  s.settingsManualGoalsHint,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 16),
+                _manualField(
+                  _fixedKcal,
+                  s.settingsFixedCaloriesGoal,
+                  'kcal',
+                  'fixed-calorie-goal',
+                ),
+                const SizedBox(height: 12),
+                _manualField(
+                  _fixedFat,
+                  s.settingsFixedFatGoal,
+                  'g',
+                  'fixed-fat-goal',
+                ),
+                const SizedBox(height: 12),
+                _manualField(
+                  _cholesterol,
+                  s.settingsCholesterolGoal,
+                  'mg',
+                  'cholesterol-goal',
+                ),
+                const SizedBox(height: 12),
+                const Divider(),
                 _NutrientRow(
                   label: s.settingsFibreGoalLabel,
                   description: s.settingsFibreGoalDescription,
