@@ -702,7 +702,9 @@ Future<void> initLocator() async {
   );
   locator.registerLazySingleton<OFFDataSource>(() => OFFDataSource());
   locator.registerLazySingleton<SpFoodDataSource>(() => SpFoodDataSource());
-  locator.registerLazySingleton(() => TrackedDayDataSource(hiveDBProvider));
+  locator.registerLazySingleton(
+    () => TrackedDayDataSource(hiveDBProvider, config: locator<ConfigDataSource>()),
+  );
   locator.registerLazySingleton<WeightLogDataSource>(
     () => WeightLogDataSource(hiveDBProvider),
   );

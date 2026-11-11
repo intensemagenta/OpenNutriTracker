@@ -20,10 +20,8 @@ class GetMacroGoalUsecase {
     final config = await _configRepository.getConfig();
     final userFatGoal = config.userFatGoalPct;
 
-    return MacroCalc.getTotalFatsGoal(
-      totalCalorieGoal,
-      userFatsGoal: userFatGoal,
-    );
+    return config.fixedFatGoalG ??
+        MacroCalc.getTotalFatsGoal(totalCalorieGoal, userFatsGoal: userFatGoal);
   }
 
   Future<double> getProteinsGoal(double totalCalorieGoal) async {

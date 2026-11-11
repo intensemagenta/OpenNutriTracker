@@ -92,10 +92,11 @@ class SendIntakeToProfilesUsecase {
 
     try {
       final intakeRepository = IntakeRepository(IntakeDataSource(scoped));
+      final config = ConfigDataSource(scoped);
       final addTrackedDay = AddTrackedDayUsecase(
-        TrackedDayRepository(TrackedDayDataSource(scoped)),
+        TrackedDayRepository(TrackedDayDataSource(scoped, config: config)),
       );
-      final configRepository = ConfigRepository(ConfigDataSource(scoped));
+      final configRepository = ConfigRepository(config);
       final getKcalGoal = GetKcalGoalUsecase(
         userRepository,
         configRepository,

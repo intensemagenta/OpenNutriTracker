@@ -4,6 +4,7 @@ import 'package:logging/logging.dart';
 import 'package:opennutritracker/core/data/data_source/remote_search_cache_data_source.dart';
 import 'package:opennutritracker/core/domain/entity/app_theme_entity.dart';
 import 'package:opennutritracker/core/domain/entity/body_weight_unit_entity.dart';
+import 'package:opennutritracker/core/domain/entity/config_entity.dart';
 import 'package:opennutritracker/core/domain/entity/tracked_day_entity.dart';
 import 'package:opennutritracker/core/domain/usecase/add_config_usecase.dart';
 import 'package:opennutritracker/core/domain/usecase/add_tracked_day_usecase.dart';
@@ -265,6 +266,26 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   /// for the day yet.
   Future<TrackedDayEntity?> getTodayTrackedDay(DateTime day) async {
     return await _getTrackedDayUsecase.getTrackedDay(day);
+  }
+
+  Future<ConfigEntity> getConfig() => _getConfigUsecase.getConfig();
+
+  Future<void> setManualNutrientGoals({
+    required double? fixedKcalGoal,
+    required double? fixedFatGoalG,
+    required double? cholesterolGoalMg,
+    double? saturatedFatGoalG,
+    double? sugarGoalG,
+    double? sodiumGoalMg,
+  }) {
+    return _addConfigUsecase.setManualNutrientGoals(
+      fixedKcalGoal: fixedKcalGoal,
+      fixedFatGoalG: fixedFatGoalG,
+      cholesterolGoalMg: cholesterolGoalMg,
+      saturatedFatGoalG: saturatedFatGoalG,
+      sugarGoalG: sugarGoalG,
+      sodiumGoalMg: sodiumGoalMg,
+    );
   }
 
   /// #173 (+follow-up): persist user-set per-nutrient goals to today's

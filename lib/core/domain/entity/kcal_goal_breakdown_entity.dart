@@ -70,7 +70,12 @@ class KcalGoalBreakdownEntity extends Equatable {
   final double fatsGoalGrams;
   final double proteinsGoalGrams;
 
+  final bool usesFixedKcalGoal;
+  final bool usesFixedFatGoal;
+
   const KcalGoalBreakdownEntity({
+    this.usesFixedKcalGoal = false,
+    this.usesFixedFatGoal = false,
     required this.age,
     required this.heightCM,
     required this.weightKG,
@@ -111,6 +116,8 @@ class KcalGoalBreakdownEntity extends Equatable {
   factory KcalGoalBreakdownEntity.compute({
     required UserEntity user,
     double? userKcalAdjustment,
+    double? fixedKcalGoal,
+    double? fixedFatGoalG,
     required double totalKcalActivities,
     double? userCarbsGoalPct,
     double? userFatsGoalPct,
@@ -174,27 +181,30 @@ class KcalGoalBreakdownEntity extends Equatable {
       taperEnabled: user.caloriesTaperEnabled,
     );
 
-    final totalGoal = CalorieGoalCalc.getTotalKcalGoal(
-      user,
-      totalKcalActivities,
-      kcalUserAdjustment: userKcalAdjustment,
-      caloriesTaperEnabled: user.caloriesTaperEnabled,
-    );
+    final totalGoal =
+        fixedKcalGoal ??
+        CalorieGoalCalc.getTotalKcalGoal(
+          user,
+          totalKcalActivities,
+          kcalUserAdjustment: userKcalAdjustment,
+          caloriesTaperEnabled: user.caloriesTaperEnabled,
+        );
 
     final carbsGrams = MacroCalc.getTotalCarbsGoal(
       totalGoal,
       userCarbsGoal: userCarbsGoalPct,
     );
-    final fatsGrams = MacroCalc.getTotalFatsGoal(
-      totalGoal,
-      userFatsGoal: userFatsGoalPct,
-    );
+    final fatsGrams =
+        fixedFatGoalG ??
+        MacroCalc.getTotalFatsGoal(totalGoal, userFatsGoal: userFatsGoalPct);
     final proteinsGrams = MacroCalc.getTotalProteinsGoal(
       totalGoal,
       userProteinsGoal: userProteinsGoalPct,
     );
 
     return KcalGoalBreakdownEntity(
+      usesFixedKcalGoal: fixedKcalGoal != null,
+      usesFixedFatGoal: fixedFatGoalG != null,
       age: user.age,
       heightCM: user.heightCM,
       weightKG: user.weightKG,

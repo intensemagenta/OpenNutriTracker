@@ -80,6 +80,24 @@ class ConfigRepository {
     return await _configDataSource.getKcalAdjustment();
   }
 
+  Future<void> setManualNutrientGoals({
+    required double? fixedKcalGoal,
+    required double? fixedFatGoalG,
+    required double? cholesterolGoalMg,
+    double? saturatedFatGoalG,
+    double? sugarGoalG,
+    double? sodiumGoalMg,
+  }) {
+    return _configDataSource.setManualNutrientGoals(
+      fixedKcalGoal: fixedKcalGoal,
+      fixedFatGoalG: fixedFatGoalG,
+      cholesterolGoalMg: cholesterolGoalMg,
+      saturatedFatGoalG: saturatedFatGoalG,
+      sugarGoalG: sugarGoalG,
+      sodiumGoalMg: sodiumGoalMg,
+    );
+  }
+
   Future<void> setConfigKcalAdjustment(double kcalAdjustment) async {
     await _configDataSource.setConfigKcalAdjustment(kcalAdjustment);
   }
@@ -105,6 +123,12 @@ class ConfigRepository {
     required double? fatGoalPct,
     required Map<String, int>? mealKcalSharesPct,
     required int? dailyWaterGoalMl,
+    double? fixedKcalGoal,
+    double? fixedFatGoalG,
+    double? cholesterolGoalMg,
+    double? saturatedFatGoalG,
+    double? sugarGoalG,
+    double? sodiumGoalMg,
   }) async {
     await _configDataSource.setConfigGoalSettings(
       kcalAdjustment: kcalAdjustment,
@@ -113,6 +137,12 @@ class ConfigRepository {
       fatGoalPct: fatGoalPct,
       mealKcalSharesPct: mealKcalSharesPct,
       dailyWaterGoalMl: dailyWaterGoalMl,
+      fixedKcalGoal: fixedKcalGoal,
+      fixedFatGoalG: fixedFatGoalG,
+      cholesterolGoalMg: cholesterolGoalMg,
+      saturatedFatGoalG: saturatedFatGoalG,
+      sugarGoalG: sugarGoalG,
+      sodiumGoalMg: sodiumGoalMg,
     );
   }
 

@@ -64,6 +64,12 @@ class TrackedDayDBO extends HiveObject {
   @HiveField(18)
   double? magnesiumGoal;
 
+  // Snapshot whether activity can raise the stored targets for this day.
+  @HiveField(19)
+  bool? fixedCalories;
+  @HiveField(20)
+  bool? fixedFat;
+
   TrackedDayDBO({
     required this.day,
     required this.calorieGoal,
@@ -84,6 +90,8 @@ class TrackedDayDBO extends HiveObject {
     this.vitaminDGoal,
     this.vitaminB12Goal,
     this.magnesiumGoal,
+    this.fixedCalories,
+    this.fixedFat,
   });
 
   factory TrackedDayDBO.fromTrackedDayEntity(TrackedDayEntity entity) {
@@ -107,6 +115,8 @@ class TrackedDayDBO extends HiveObject {
       vitaminDGoal: entity.vitaminDGoal,
       vitaminB12Goal: entity.vitaminB12Goal,
       magnesiumGoal: entity.magnesiumGoal,
+      fixedCalories: entity.fixedCalories,
+      fixedFat: entity.fixedFat,
     );
   }
 

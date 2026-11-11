@@ -37,6 +37,12 @@ class ConfigEntity extends Equatable {
   final bool usesImperialHeightUnits;
   final BodyWeightUnit bodyWeightUnit;
   final double? userKcalAdjustment;
+  final double? fixedKcalGoal;
+  final double? fixedFatGoalG;
+  final double? cholesterolGoalMg;
+  final double? saturatedFatGoalG;
+  final double? sugarGoalG;
+  final double? sodiumGoalMg;
   final double? userCarbGoalPct;
   final double? userProteinGoalPct;
   final double? userFatGoalPct;
@@ -240,6 +246,12 @@ class ConfigEntity extends Equatable {
     this.usesImperialHeightUnits = false,
     this.bodyWeightUnit = BodyWeightUnit.kg,
     this.userKcalAdjustment,
+    this.fixedKcalGoal,
+    this.fixedFatGoalG,
+    this.cholesterolGoalMg,
+    this.saturatedFatGoalG,
+    this.sugarGoalG,
+    this.sodiumGoalMg,
     this.userCarbGoalPct,
     this.userProteinGoalPct,
     this.userFatGoalPct,
@@ -352,6 +364,12 @@ class ConfigEntity extends Equatable {
               ? BodyWeightUnit.lb
               : BodyWeightUnit.kg),
     userKcalAdjustment: dbo.userKcalAdjustment,
+    fixedKcalGoal: dbo.fixedKcalGoal,
+    fixedFatGoalG: dbo.fixedFatGoalG,
+    cholesterolGoalMg: dbo.cholesterolGoalMg,
+    saturatedFatGoalG: dbo.saturatedFatGoalG,
+    sugarGoalG: dbo.sugarGoalG,
+    sodiumGoalMg: dbo.sodiumGoalMg,
     userCarbGoalPct: dbo.userCarbGoalPct,
     userProteinGoalPct: dbo.userProteinGoalPct,
     userFatGoalPct: dbo.userFatGoalPct,
@@ -467,6 +485,12 @@ class ConfigEntity extends Equatable {
     usesImperialHeightUnits,
     bodyWeightUnit,
     userKcalAdjustment,
+    fixedKcalGoal,
+    fixedFatGoalG,
+    cholesterolGoalMg,
+    saturatedFatGoalG,
+    sugarGoalG,
+    sodiumGoalMg,
     userCarbGoalPct,
     userProteinGoalPct,
     userFatGoalPct,

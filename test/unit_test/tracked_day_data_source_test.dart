@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:opennutritracker/core/data/data_source/config_data_source.dart';
 import 'package:opennutritracker/core/data/data_source/tracked_day_data_source.dart';
+import 'package:opennutritracker/core/data/dbo/config_dbo.dart';
 import 'package:opennutritracker/core/data/dbo/tracked_day_dbo.dart';
 
 import '../helpers/hive_test_setup.dart';
@@ -212,6 +214,51 @@ void main() {
       await ds.reduceDayCalorieGoal(day, 50);
       result = await ds.getTrackedDay(day);
       expect(result!.calorieGoal, equals(2050));
+    });
+
+    test('activity credits leave stored fixed targets unchanged', () async {
+      final configBox = await Hive.openBox<ConfigDBO>('fixed_goals_config');
+      final appBox = await Hive.openBox<ConfigDBO>('fixed_goals_app_config');
+      addTearDown(configBox.deleteFromDisk);
+      addTearDown(appBox.deleteFromDisk);
+      final db = FakeHiveDBProvider(
+        trackedDayBox: box,
+        configBox: configBox,
+        appConfigBox: appBox,
+      );
+      final config = ConfigDataSource(db);
+      await config.setManualNutrientGoals(
+        fixedKcalGoal: 2000,
+        fixedFatGoalG: 65,
+        cholesterolGoalMg: 180,
+        saturatedFatGoalG: 14,
+        sugarGoalG: 35,
+        sodiumGoalMg: 1700,
+      );
+      expect(config.getConfigNow().cholesterolGoalMg, 180);
+      final source = TrackedDayDataSource(db, config: config);
+      await source.saveTrackedDay(seed());
+      await source.increaseDayCalorieGoal(day, 200);
+      await source.increaseDayMacroGoal(day, fatAmount: 5, carbsAmount: 10);
+      final row = (await source.getTrackedDay(day))!;
+      expect(row.calorieGoal, 2000);
+      expect(row.fatGoal, 65);
+      expect(row.carbsGoal, 250);
+      expect(row.satFatGoal, 14);
+      expect(row.sugarsGoal, 35);
+      expect(row.sodiumGoal, 1700);
+
+      await config.setManualNutrientGoals(
+        fixedKcalGoal: null,
+        fixedFatGoalG: 65,
+        cholesterolGoalMg: null,
+      );
+      await source.updateDayCalorieGoal(day, 2100);
+      await source.increaseDayCalorieGoal(day, 200);
+      await source.increaseDayMacroGoal(day, fatAmount: 5, carbsAmount: 10);
+      expect(row.calorieGoal, 2300);
+      expect(row.fatGoal, 65);
+      expect(row.carbsGoal, 260);
     });
 
     test('updateDayMacroGoals updates only the named macros', () async {

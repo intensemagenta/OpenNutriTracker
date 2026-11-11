@@ -221,6 +221,22 @@ class ConfigDBO extends HiveObject {
   @HiveField(42)
   bool? hasLeftTip;
 
+  @HiveField(43)
+  double? fixedKcalGoal;
+
+  @HiveField(44)
+  double? fixedFatGoalG;
+
+  @HiveField(45)
+  double? cholesterolGoalMg;
+
+  @HiveField(46)
+  double? saturatedFatGoalG;
+  @HiveField(47)
+  double? sugarGoalG;
+  @HiveField(48)
+  double? sodiumGoalMg;
+
   ConfigDBO(
     this.hasAcceptedDisclaimer,
     this.hasAcceptedPolicy,
@@ -262,6 +278,12 @@ class ConfigDBO extends HiveObject {
     this.trackedDaysOffsetMinutes,
     this.localeSyncSeeded,
     this.hasLeftTip,
+    this.fixedKcalGoal,
+    this.fixedFatGoalG,
+    this.cholesterolGoalMg,
+    this.saturatedFatGoalG,
+    this.sugarGoalG,
+    this.sodiumGoalMg,
   });
 
   factory ConfigDBO.empty() =>

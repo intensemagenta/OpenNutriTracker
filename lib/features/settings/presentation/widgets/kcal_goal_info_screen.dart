@@ -69,21 +69,23 @@ class _KcalGoalInfoScreenState extends State<KcalGoalInfoScreen> {
               vertical: Dimens.spacing16,
             ),
             children: [
-              Text(
-                l10n.kcalGoalInfoIntro,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: Dimens.spacing16),
-              _InputsCard(breakdown: breakdown),
-              const SizedBox(height: Dimens.spacing12),
-              _TdeeCard(breakdown: breakdown),
-              const SizedBox(height: Dimens.spacing12),
-              _AdjustmentCard(breakdown: breakdown),
-              const SizedBox(height: Dimens.spacing12),
-              _ManualAdjustmentCard(breakdown: breakdown),
-              const SizedBox(height: Dimens.spacing12),
-              _ActivityCard(breakdown: breakdown),
-              const SizedBox(height: Dimens.spacing12),
+              if (!breakdown.usesFixedKcalGoal) ...[
+                Text(
+                  l10n.kcalGoalInfoIntro,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: Dimens.spacing16),
+                _InputsCard(breakdown: breakdown),
+                const SizedBox(height: Dimens.spacing12),
+                _TdeeCard(breakdown: breakdown),
+                const SizedBox(height: Dimens.spacing12),
+                _AdjustmentCard(breakdown: breakdown),
+                const SizedBox(height: Dimens.spacing12),
+                _ManualAdjustmentCard(breakdown: breakdown),
+                const SizedBox(height: Dimens.spacing12),
+                _ActivityCard(breakdown: breakdown),
+                const SizedBox(height: Dimens.spacing12),
+              ],
               _ResultCard(breakdown: breakdown),
               const SizedBox(height: Dimens.spacing12),
               _MacroCard(breakdown: breakdown),
@@ -383,29 +385,33 @@ class _ResultCard extends StatelessWidget {
     return _SectionCard(
       title: l10n.kcalGoalInfoResultSection,
       children: [
-        _ValueRow(
-          label: l10n.kcalGoalInfoTdeeResultLabel,
-          value: EnergyDisplay.formatWithUnit(context, breakdown.tdeeKcal),
-        ),
-        _ValueRow(
-          label: l10n.kcalGoalInfoAppliedAdjustmentLabel,
-          value: _signedEnergy(context, breakdown.effectiveAdjustmentKcal),
-        ),
-        _ValueRow(
-          label: l10n.settingsKcalAdjustmentLabel,
-          value: _signedEnergy(context, breakdown.manualKcalAdjustment),
-        ),
-        _ValueRow(
-          label: l10n.activityLabel,
-          value: _signedEnergy(context, breakdown.activityKcal),
-        ),
-        const Divider(height: Dimens.spacing20),
+        if (!breakdown.usesFixedKcalGoal) ...[
+          _ValueRow(
+            label: l10n.kcalGoalInfoTdeeResultLabel,
+            value: EnergyDisplay.formatWithUnit(context, breakdown.tdeeKcal),
+          ),
+          _ValueRow(
+            label: l10n.kcalGoalInfoAppliedAdjustmentLabel,
+            value: _signedEnergy(context, breakdown.effectiveAdjustmentKcal),
+          ),
+          _ValueRow(
+            label: l10n.settingsKcalAdjustmentLabel,
+            value: _signedEnergy(context, breakdown.manualKcalAdjustment),
+          ),
+          _ValueRow(
+            label: l10n.activityLabel,
+            value: _signedEnergy(context, breakdown.activityKcal),
+          ),
+          const Divider(height: Dimens.spacing20),
+        ],
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Text(
-                l10n.kcalGoalInfoResultSection,
+                breakdown.usesFixedKcalGoal
+                    ? l10n.settingsFixedCaloriesGoal
+                    : l10n.kcalGoalInfoResultSection,
                 style: theme.textTheme.titleMedium,
               ),
             ),
@@ -436,20 +442,23 @@ class _MacroCard extends StatelessWidget {
     return _SectionCard(
       title: l10n.kcalGoalInfoMacroSection,
       children: [
-        Text(
-          l10n.kcalGoalInfoMacroExplanation,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: Dimens.spacing12),
-        _FormulaText.raw(
-          text: '${l10n.carbsLabel}: '
-              '${_macroLine(goalKcal, breakdown.carbsFractionGoal, MacroCalc.carbsKcalPerGram, breakdown.carbsGoalGrams)}\n'
-              '${l10n.fatLabel}: '
-              '${_macroLine(goalKcal, breakdown.fatsFractionGoal, MacroCalc.fatKcalPerGram, breakdown.fatsGoalGrams)}\n'
-              '${l10n.proteinLabel}: '
-              '${_macroLine(goalKcal, breakdown.proteinsFractionGoal, MacroCalc.proteinKcalPerGram, breakdown.proteinsGoalGrams)}',
-        ),
-        const Divider(height: Dimens.spacing20),
+        if (!breakdown.usesFixedFatGoal) ...[
+          Text(
+            l10n.kcalGoalInfoMacroExplanation,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: Dimens.spacing12),
+          _FormulaText.raw(
+            text:
+                '${l10n.carbsLabel}: '
+                '${_macroLine(goalKcal, breakdown.carbsFractionGoal, MacroCalc.carbsKcalPerGram, breakdown.carbsGoalGrams)}\n'
+                '${l10n.fatLabel}: '
+                '${_macroLine(goalKcal, breakdown.fatsFractionGoal, MacroCalc.fatKcalPerGram, breakdown.fatsGoalGrams)}\n'
+                '${l10n.proteinLabel}: '
+                '${_macroLine(goalKcal, breakdown.proteinsFractionGoal, MacroCalc.proteinKcalPerGram, breakdown.proteinsGoalGrams)}',
+          ),
+          const Divider(height: Dimens.spacing20),
+        ],
         _ValueRow(
           label: l10n.carbsLabel,
           value: '${breakdown.carbsGoalGrams.toInt()} g',

@@ -12,6 +12,8 @@ class TrackedDayEntity extends Equatable {
   final double? carbsGoal;
   final double? carbsTracked;
   final double? fatGoal;
+  final bool? fixedCalories;
+  final bool? fixedFat;
   final double? fatTracked;
   final double? proteinGoal;
   final double? proteinTracked;
@@ -46,6 +48,8 @@ class TrackedDayEntity extends Equatable {
     this.carbsGoal,
     this.carbsTracked,
     this.fatGoal,
+    this.fixedCalories,
+    this.fixedFat,
     this.fatTracked,
     this.proteinGoal,
     this.proteinTracked,
@@ -76,6 +80,8 @@ class TrackedDayEntity extends Equatable {
       carbsGoal: trackedDayDBO.carbsGoal,
       carbsTracked: finite(trackedDayDBO.carbsTracked),
       fatGoal: trackedDayDBO.fatGoal,
+      fixedCalories: trackedDayDBO.fixedCalories,
+      fixedFat: trackedDayDBO.fixedFat,
       fatTracked: finite(trackedDayDBO.fatTracked),
       proteinGoal: trackedDayDBO.proteinGoal,
       proteinTracked: finite(trackedDayDBO.proteinTracked),
@@ -144,6 +150,8 @@ class TrackedDayEntity extends Equatable {
         carbsGoal,
         carbsTracked,
         fatGoal,
+        fixedCalories,
+        fixedFat,
         fatTracked,
         proteinGoal,
         proteinTracked,

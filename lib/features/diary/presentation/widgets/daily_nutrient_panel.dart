@@ -156,7 +156,8 @@ class _DailyNutrientPanelState extends State<DailyNutrientPanel> {
     // intake is added/removed. Refetch so the weekly average stays accurate
     // and the visibility map picks up any Settings edits.
     if (oldWidget.intakes != widget.intakes ||
-        oldWidget.selectedDay != widget.selectedDay) {
+        oldWidget.selectedDay != widget.selectedDay ||
+        oldWidget.trackedDay != widget.trackedDay) {
       _panelDataFuture = _loadPanelData();
     }
   }
@@ -184,8 +185,9 @@ class _DailyNutrientPanelState extends State<DailyNutrientPanel> {
     }
 
     Map<String, bool> visibility = const <String, bool>{};
+    ConfigEntity? config;
     try {
-      final config = await locator<GetConfigUsecase>().getConfig();
+      config = await locator<GetConfigUsecase>().getConfig();
       visibility = config.nutrientPanelVisibility;
     } catch (_) {
       // Tests without the locator wired up — default to "all visible".
@@ -204,6 +206,7 @@ class _DailyNutrientPanelState extends State<DailyNutrientPanel> {
     return _PanelData(
       user: user,
       visibility: visibility,
+      config: config,
       weekIntakes: weekIntakes,
     );
   }
@@ -271,14 +274,16 @@ class _DailyNutrientPanelState extends State<DailyNutrientPanel> {
       DailyNutrientPanel.defaultFibreRefG,
     );
     final sodiumRefMg = resolveWithDri(
-      () => td?.sodiumGoal,
+      () => td?.sodiumGoal ?? data?.config?.sodiumGoalMg,
       NutrientPanelKeys.sodium,
       DailyNutrientPanel.defaultSodiumRefMg,
     );
     // Saturated fat and sugars have no IOM RDA — the resolver helper still
     // returns the published FDA Daily Value as the fallback for both.
-    final saturatedFatRefG = DailyNutrientPanel.resolveSatFatReference(td);
-    final sugarRefG = DailyNutrientPanel.resolveSugarsReference(td);
+    final saturatedFatRefG = td?.satFatGoal ??
+        data?.config?.saturatedFatGoalG ??
+        DailyNutrientPanel.defaultSaturatedFatRefG;
+    final sugarRefG = td?.sugarsGoal ?? data?.config?.sugarGoalG ?? DailyNutrientPanel.defaultSugarRefG;
     final calciumRefMg = resolveWithDri(
       () => td?.calciumGoal,
       NutrientPanelKeys.calcium,
@@ -311,7 +316,17 @@ class _DailyNutrientPanelState extends State<DailyNutrientPanel> {
     );
 
     final s = S.of(context);
+    final cholesterolGoal = data?.config?.cholesterolGoalMg;
     final allRows = <_PanelRow>[
+      if (cholesterolGoal != null)
+        _PanelRow(
+          key: NutrientPanelKeys.cholesterol,
+          label: s.cholesterolLabel,
+          value: totals.cholesterolMg,
+          reference: cholesterolGoal,
+          unit: 'mg',
+          excessMatters: true,
+        ),
       _PanelRow(
         key: NutrientPanelKeys.fiber,
         label: s.fiberLabel,
@@ -636,6 +651,7 @@ enum _NutrientView { day, week }
 class NutrientPanelTotals {
   final double fiberG;
   final double sodiumMg;
+  final double cholesterolMg;
   final double saturatedFatG;
   final double sugarG;
   final double calciumMg;
@@ -648,6 +664,7 @@ class NutrientPanelTotals {
   const NutrientPanelTotals({
     required this.fiberG,
     required this.sodiumMg,
+    this.cholesterolMg = 0,
     required this.saturatedFatG,
     required this.sugarG,
     required this.calciumMg,
@@ -675,6 +692,7 @@ class NutrientPanelTotals {
     return NutrientPanelTotals(
       fiberG: sum((n) => n.fiber100),
       sodiumMg: sum((n) => n.sodium100),
+      cholesterolMg: sum((n) => n.cholesterol100),
       saturatedFatG: sum((n) => n.saturatedFat100),
       sugarG: sum((n) => n.sugars100),
       calciumMg: sum((n) => n.calcium100),
@@ -696,6 +714,7 @@ class NutrientPanelKeys {
 
   static const String fiber = 'fiber';
   static const String sodium = 'sodium';
+  static const String cholesterol = 'cholesterol';
   static const String saturatedFat = 'saturated_fat';
   static const String sugar = 'sugar';
   static const String calcium = 'calcium';
@@ -708,6 +727,7 @@ class NutrientPanelKeys {
   static const List<String> all = <String>[
     fiber,
     sodium,
+    cholesterol,
     saturatedFat,
     sugar,
     calcium,
@@ -722,11 +742,13 @@ class NutrientPanelKeys {
 class _PanelData {
   final UserEntity? user;
   final Map<String, bool> visibility;
+  final ConfigEntity? config;
   final List<IntakeEntity> weekIntakes;
 
   _PanelData({
     required this.user,
     required this.visibility,
+    required this.config,
     required this.weekIntakes,
   });
 }
@@ -775,7 +797,7 @@ class _NutrientRow extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final palette = isDark ? AppPalette.dark : AppPalette.light;
     final textTheme = Theme.of(context).textTheme;
-    final ratio = reference > 0 ? value / reference : 0.0;
+    final ratio = reference > 0 ? value / reference : (value > 0 ? 2.0 : 0.0);
     final clamped = ratio.clamp(0.0, 1.0).toDouble();
     final color = _colorForRatio(context, ratio);
     final valueLabel = '${value.toStringAsFixed(value >= 10 ? 0 : 1)}'

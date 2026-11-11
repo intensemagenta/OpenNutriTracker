@@ -39,6 +39,8 @@ class GetKcalGoalBreakdownUsecase {
     return KcalGoalBreakdownEntity.compute(
       user: user,
       userKcalAdjustment: config.userKcalAdjustment,
+      fixedKcalGoal: config.fixedKcalGoal,
+      fixedFatGoalG: config.fixedFatGoalG,
       totalKcalActivities: totalKcalActivities,
       userCarbsGoalPct: config.userCarbGoalPct,
       userFatsGoalPct: config.userFatGoalPct,

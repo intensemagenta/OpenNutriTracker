@@ -349,12 +349,26 @@ void main() {
       'fatGoalPct': c.userFatGoalPct,
       'mealKcalSharesPct': c.mealKcalSharesPct,
       'dailyWaterGoalMl': c.dailyWaterGoalMl,
+      'fixedKcalGoal': c.fixedKcalGoal,
+      'fixedFatGoalG': c.fixedFatGoalG,
+      'cholesterolGoalMg': c.cholesterolGoalMg,
+      'saturatedFatGoalG': c.saturatedFatGoalG,
+      'sugarGoalG': c.sugarGoalG,
+      'sodiumGoalMg': c.sodiumGoalMg,
     };
   }
 
   test('a JSON export carries the goal settings, and importing it after a '
       'profile reset restores them', () async {
     await setCustomGoals();
+    await config.setManualNutrientGoals(
+      fixedKcalGoal: 1900,
+      fixedFatGoalG: 52.5,
+      cholesterolGoalMg: 180,
+      saturatedFatGoalG: 14,
+      sugarGoalG: 35,
+      sodiumGoalMg: 1700,
+    );
     final before = await goals();
     final archive = await exporter.assembleArchive(
       format: ExportFormat.json,

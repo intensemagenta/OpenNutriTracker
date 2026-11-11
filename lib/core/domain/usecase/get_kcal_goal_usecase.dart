@@ -22,8 +22,10 @@ class GetKcalGoalUsecase {
     double? totalKcalActivitiesParam,
     double? kcalUserAdjustment,
   }) async {
-    final user = userEntity ?? await _userRepository.getUserData();
     final config = await _configRepository.getConfig();
+    final fixedGoal = config.fixedKcalGoal;
+    if (fixedGoal != null) return fixedGoal;
+    final user = userEntity ?? await _userRepository.getUserData();
     final totalKcalActivities =
         totalKcalActivitiesParam ??
         (await _userActivityRepository.getAllUserActivityByDate(

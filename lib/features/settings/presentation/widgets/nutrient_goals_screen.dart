@@ -84,6 +84,10 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
   double? _vitaminB12;
   UserEntity? _user;
   bool _loaded = false;
+  bool _saving = false;
+  final _fixedKcal = TextEditingController();
+  final _fixedFat = TextEditingController();
+  final _cholesterol = TextEditingController();
 
   late final TextEditingController _fibreController;
   late final TextEditingController _satFatController;
@@ -120,6 +124,9 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
 
   @override
   void dispose() {
+    _fixedKcal.dispose();
+    _fixedFat.dispose();
+    _cholesterol.dispose();
     _fibreController.dispose();
     _satFatController.dispose();
     _sugarsController.dispose();
@@ -182,17 +189,21 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
           : value.toStringAsFixed(1);
 
   Future<void> _load() async {
+    final config = await widget.settingsBloc.getConfig();
     final user = await widget.profileBloc.getUser();
     final today = await widget.settingsBloc.getTodayTrackedDay(
       await widget.settingsBloc.getCurrentLogicalDay(),
     );
     if (!mounted) return;
     setState(() {
+      _fixedKcal.text = config.fixedKcalGoal?.toString() ?? '';
+      _fixedFat.text = config.fixedFatGoalG?.toString() ?? '';
+      _cholesterol.text = config.cholesterolGoalMg?.toString() ?? '';
       _user = user;
       _fibre = today?.fibreGoal;
-      _satFat = today?.satFatGoal;
-      _sugars = today?.sugarsGoal;
-      _sodium = today?.sodiumGoal;
+      _satFat = config.saturatedFatGoalG ?? today?.satFatGoal;
+      _sugars = config.sugarGoalG ?? today?.sugarsGoal;
+      _sodium = config.sodiumGoalMg ?? today?.sodiumGoal;
       _calcium = today?.calciumGoal;
       _iron = today?.ironGoal;
       _potassium = today?.potassiumGoal;
@@ -237,6 +248,9 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
 
   void _resetAll() {
     setState(() {
+      _fixedKcal.clear();
+      _fixedFat.clear();
+      _cholesterol.clear();
       _fibre = null;
       _satFat = null;
       _sugars = null;
@@ -261,23 +275,101 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
     _applyText(_sugarsController, _sugarsMin, _sugarsMax, (v) => _sugars = v);
     _applyText(_sodiumController, _sodiumMin, _sodiumMax, (v) => _sodium = v);
     _applyText(
-        _calciumController, _calciumMin, _calciumMax, (v) => _calcium = v);
-    _applyText(_ironController, _ironMin, _ironMax, (v) => _iron = v,
-        decimalStep: true);
-    _applyText(_potassiumController, _potassiumMin, _potassiumMax,
-        (v) => _potassium = v);
-    _applyText(_magnesiumController, _magnesiumMin, _magnesiumMax,
-        (v) => _magnesium = v);
-    _applyText(_vitaminDController, _vitaminDMin, _vitaminDMax,
-        (v) => _vitaminD = v,
-        decimalStep: true);
-    _applyText(_vitaminB12Controller, _vitaminB12Min, _vitaminB12Max,
-        (v) => _vitaminB12 = v,
-        decimalStep: true);
+      _calciumController,
+      _calciumMin,
+      _calciumMax,
+      (v) => _calcium = v,
+    );
+    _applyText(
+      _ironController,
+      _ironMin,
+      _ironMax,
+      (v) => _iron = v,
+      decimalStep: true,
+    );
+    _applyText(
+      _potassiumController,
+      _potassiumMin,
+      _potassiumMax,
+      (v) => _potassium = v,
+    );
+    _applyText(
+      _magnesiumController,
+      _magnesiumMin,
+      _magnesiumMax,
+      (v) => _magnesium = v,
+    );
+    _applyText(
+      _vitaminDController,
+      _vitaminDMin,
+      _vitaminDMax,
+      (v) => _vitaminD = v,
+      decimalStep: true,
+    );
+    _applyText(
+      _vitaminB12Controller,
+      _vitaminB12Min,
+      _vitaminB12Max,
+      (v) => _vitaminB12 = v,
+      decimalStep: true,
+    );
+  }
+
+  static double? _parseGoal(String text) =>
+      double.tryParse(text.trim().replaceAll(',', '.'));
+
+  Widget _manualField(
+    TextEditingController controller,
+    String label,
+    String unit,
+    String identifier,
+  ) {
+    return Semantics(
+      identifier: identifier,
+      child: TextField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(labelText: label, suffixText: unit),
+      ),
+    );
+  }
+
+  static bool _validGoal(String text, {bool allowZero = true}) {
+    if (text.trim().isEmpty) return true;
+    final value = _parseGoal(text);
+    return value != null &&
+        value.isFinite &&
+        (allowZero ? value >= 0 : value > 0);
   }
 
   Future<void> _save() async {
+    if (_saving) return;
+    if (!_validGoal(_fixedKcal.text, allowZero: false) ||
+        !_validGoal(_fixedFat.text) ||
+        !_validGoal(_cholesterol.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S.of(context).settingsManualGoalInvalid)),
+      );
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await _saveGoals();
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _saveGoals() async {
     _applyPendingTextInputs();
+    await widget.settingsBloc.setManualNutrientGoals(
+      fixedKcalGoal: _parseGoal(_fixedKcal.text),
+      fixedFatGoalG: _parseGoal(_fixedFat.text),
+      cholesterolGoalMg: _parseGoal(_cholesterol.text),
+      saturatedFatGoalG: _satFat,
+      sugarGoalG: _sugars,
+      sodiumGoalMg: _sodium,
+    );
     // Make sure today's tracked-day row exists before we write per-
     // nutrient values onto it. updateTrackedDay creates the row from
     // current macro goals if missing, or refreshes the macro columns
@@ -330,7 +422,7 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
           Semantics(
             identifier: 'nutrient-goals-reset',
             child: TextButton(
-              onPressed: _loaded ? _resetAll : null,
+              onPressed: _loaded && !_saving ? _resetAll : null,
               child: Text(s.buttonResetLabel),
             ),
           ),
@@ -339,7 +431,7 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
             child: Semantics(
               identifier: 'nutrient-goals-save',
               child: FilledButton(
-                onPressed: _loaded ? _save : null,
+                onPressed: _loaded && !_saving ? _save : null,
                 child: Text(s.buttonSaveLabel),
               ),
             ),
@@ -363,6 +455,31 @@ class _NutrientGoalsScreenState extends State<NutrientGoalsScreen> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(s.settingsManualGoalsHint),
+                    _manualField(
+                      _fixedKcal,
+                      s.settingsFixedCaloriesGoal,
+                      'kcal',
+                      'fixed-calorie-goal',
+                    ),
+                    _manualField(
+                      _fixedFat,
+                      s.settingsFixedFatGoal,
+                      'g',
+                      'fixed-fat-goal',
+                    ),
+                    _manualField(
+                      _cholesterol,
+                      s.settingsCholesterolGoal,
+                      'mg',
+                      'cholesterol-goal',
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
                 _NutrientRow(
                   label: s.settingsFibreGoalLabel,
                   description: s.settingsFibreGoalDescription,

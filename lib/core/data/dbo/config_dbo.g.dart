@@ -57,6 +57,12 @@ class ConfigDBOAdapter extends TypeAdapter<ConfigDBO> {
         trackedDaysOffsetMinutes: (fields[40] as num?)?.toInt(),
         localeSyncSeeded: fields[41] as bool?,
         hasLeftTip: fields[42] as bool?,
+        fixedKcalGoal: (fields[43] as num?)?.toDouble(),
+        fixedFatGoalG: (fields[44] as num?)?.toDouble(),
+        cholesterolGoalMg: (fields[45] as num?)?.toDouble(),
+        saturatedFatGoalG: (fields[46] as num?)?.toDouble(),
+        sugarGoalG: (fields[47] as num?)?.toDouble(),
+        sodiumGoalMg: (fields[48] as num?)?.toDouble(),
       )
       ..userCarbGoalPct = (fields[6] as num?)?.toDouble()
       ..userProteinGoalPct = (fields[7] as num?)?.toDouble()
@@ -66,7 +72,7 @@ class ConfigDBOAdapter extends TypeAdapter<ConfigDBO> {
   @override
   void write(BinaryWriter writer, ConfigDBO obj) {
     writer
-      ..writeByte(43)
+      ..writeByte(49)
       ..writeByte(0)
       ..write(obj.hasAcceptedDisclaimer)
       ..writeByte(1)
@@ -152,7 +158,19 @@ class ConfigDBOAdapter extends TypeAdapter<ConfigDBO> {
       ..writeByte(41)
       ..write(obj.localeSyncSeeded)
       ..writeByte(42)
-      ..write(obj.hasLeftTip);
+      ..write(obj.hasLeftTip)
+      ..writeByte(43)
+      ..write(obj.fixedKcalGoal)
+      ..writeByte(44)
+      ..write(obj.fixedFatGoalG)
+      ..writeByte(45)
+      ..write(obj.cholesterolGoalMg)
+      ..writeByte(46)
+      ..write(obj.saturatedFatGoalG)
+      ..writeByte(47)
+      ..write(obj.sugarGoalG)
+      ..writeByte(48)
+      ..write(obj.sodiumGoalMg);
   }
 
   @override
@@ -231,6 +249,12 @@ ConfigDBO _$ConfigDBOFromJson(Map<String, dynamic> json) =>
             ?.toInt(),
         localeSyncSeeded: json['localeSyncSeeded'] as bool?,
         hasLeftTip: json['hasLeftTip'] as bool?,
+        fixedKcalGoal: (json['fixedKcalGoal'] as num?)?.toDouble(),
+        fixedFatGoalG: (json['fixedFatGoalG'] as num?)?.toDouble(),
+        cholesterolGoalMg: (json['cholesterolGoalMg'] as num?)?.toDouble(),
+        saturatedFatGoalG: (json['saturatedFatGoalG'] as num?)?.toDouble(),
+        sugarGoalG: (json['sugarGoalG'] as num?)?.toDouble(),
+        sodiumGoalMg: (json['sodiumGoalMg'] as num?)?.toDouble(),
       )
       ..userCarbGoalPct = (json['userCarbGoalPct'] as num?)?.toDouble()
       ..userProteinGoalPct = (json['userProteinGoalPct'] as num?)?.toDouble()
@@ -282,6 +306,12 @@ Map<String, dynamic> _$ConfigDBOToJson(ConfigDBO instance) => <String, dynamic>{
   'trackedDaysOffsetMinutes': instance.trackedDaysOffsetMinutes,
   'localeSyncSeeded': instance.localeSyncSeeded,
   'hasLeftTip': instance.hasLeftTip,
+  'fixedKcalGoal': instance.fixedKcalGoal,
+  'fixedFatGoalG': instance.fixedFatGoalG,
+  'cholesterolGoalMg': instance.cholesterolGoalMg,
+  'saturatedFatGoalG': instance.saturatedFatGoalG,
+  'sugarGoalG': instance.sugarGoalG,
+  'sodiumGoalMg': instance.sodiumGoalMg,
 };
 
 const _$AppThemeDBOEnumMap = {

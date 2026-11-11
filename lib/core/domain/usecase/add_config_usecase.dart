@@ -52,6 +52,24 @@ class AddConfigUsecase {
     await _configRepository.setConfigBodyWeightUnit(unit);
   }
 
+  Future<void> setManualNutrientGoals({
+    required double? fixedKcalGoal,
+    required double? fixedFatGoalG,
+    required double? cholesterolGoalMg,
+    double? saturatedFatGoalG,
+    double? sugarGoalG,
+    double? sodiumGoalMg,
+  }) {
+    return _configRepository.setManualNutrientGoals(
+      fixedKcalGoal: fixedKcalGoal,
+      fixedFatGoalG: fixedFatGoalG,
+      cholesterolGoalMg: cholesterolGoalMg,
+      saturatedFatGoalG: saturatedFatGoalG,
+      sugarGoalG: sugarGoalG,
+      sodiumGoalMg: sodiumGoalMg,
+    );
+  }
+
   Future<void> setConfigKcalAdjustment(double kcalAdjustment) async {
     await _configRepository.setConfigKcalAdjustment(kcalAdjustment);
   }

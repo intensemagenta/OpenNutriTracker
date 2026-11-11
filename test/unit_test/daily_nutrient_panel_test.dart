@@ -13,6 +13,7 @@ import 'package:opennutritracker/features/diary/presentation/widgets/daily_nutri
 MealEntity _meal({
   double? fiber,
   double? sodium,
+  double? cholesterol,
   double? saturatedFat,
   double? sugars,
   double? calcium,
@@ -41,6 +42,7 @@ MealEntity _meal({
       saturatedFat100: saturatedFat,
       fiber100: fiber,
       sodium100: sodium,
+      cholesterol100: cholesterol,
       potassium100: potassium,
       magnesium100: magnesium,
       calcium100: calcium,
@@ -67,6 +69,15 @@ IntakeEntity _intake({
 }
 
 void main() {
+  test('cholesterol follows serving weight and averages across a week', () {
+    final entries = [_intake(amountGrams: 175, meal: _meal(cholesterol: 40))];
+    expect(NutrientPanelTotals.fromIntakes(entries).cholesterolMg, 70);
+    expect(
+      NutrientPanelTotals.fromIntakes(entries, weekly: true).cholesterolMg,
+      10,
+    );
+  });
+
   group('NutrientPanelTotals.fromIntakes — day view', () {
     test('aggregates three sample intakes for every surfaced nutrient', () {
       // Three foods, each carrying a slice of the nutrients we surface. The
@@ -243,13 +254,14 @@ void main() {
   });
 
   group('NutrientPanelKeys', () {
-    test('exposes all ten nutrient identifiers', () {
-      expect(NutrientPanelKeys.all, hasLength(10));
+    test('exposes all eleven nutrient identifiers', () {
+      expect(NutrientPanelKeys.all, hasLength(11));
       expect(
         NutrientPanelKeys.all.toSet(),
         equals(<String>{
           NutrientPanelKeys.fiber,
           NutrientPanelKeys.sodium,
+          NutrientPanelKeys.cholesterol,
           NutrientPanelKeys.saturatedFat,
           NutrientPanelKeys.sugar,
           NutrientPanelKeys.calcium,

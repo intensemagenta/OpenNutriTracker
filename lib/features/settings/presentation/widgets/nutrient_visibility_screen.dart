@@ -54,6 +54,8 @@ class _NutrientVisibilityScreenState extends State<NutrientVisibilityScreen> {
     switch (key) {
       case NutrientPanelKeys.fiber:
         return s.fiberLabel;
+      case NutrientPanelKeys.cholesterol:
+        return s.cholesterolLabel;
       case NutrientPanelKeys.sodium:
         return s.sodiumLabel;
       case NutrientPanelKeys.saturatedFat:

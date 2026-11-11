@@ -6,7 +6,8 @@ import 'package:opennutritracker/core/domain/entity/config_entity.dart';
 ///
 /// Only the goals the config keeps per profile (see `ConfigDataSource`):
 /// the kcal adjustment, the macro split, the per-meal kcal shares and the
-/// daily water goal. Device-wide preferences (theme, language, units,
+/// daily water goal, plus manually entered calorie, fat and cholesterol
+/// targets. Device-wide preferences (theme, language, units,
 /// notifications, consents) and the health-import state are left out; see
 /// `docs/export-format.md` for why. Per-nutrient goals are not here either:
 /// they are stored on each tracked day and travel in
@@ -42,6 +43,12 @@ class GoalSettingsBackup {
   final double? fatGoalPct;
   final Map<String, int>? mealKcalSharesPct;
   final int? dailyWaterGoalMl;
+  final double? fixedKcalGoal;
+  final double? fixedFatGoalG;
+  final double? cholesterolGoalMg;
+  final double? saturatedFatGoalG;
+  final double? sugarGoalG;
+  final double? sodiumGoalMg;
 
   const GoalSettingsBackup({
     this.kcalAdjustment,
@@ -50,6 +57,12 @@ class GoalSettingsBackup {
     this.fatGoalPct,
     this.mealKcalSharesPct,
     this.dailyWaterGoalMl,
+    this.fixedKcalGoal,
+    this.fixedFatGoalG,
+    this.cholesterolGoalMg,
+    this.saturatedFatGoalG,
+    this.sugarGoalG,
+    this.sodiumGoalMg,
   });
 
   /// The goals stored in [config], with any value [fromJson] would reject
@@ -76,6 +89,12 @@ class GoalSettingsBackup {
           ? {for (final k in _mealKeys) k: shares[k]!}
           : null,
       dailyWaterGoalMl: _waterGoalError(water) == null ? water : null,
+      fixedKcalGoal: config.fixedKcalGoal,
+      fixedFatGoalG: config.fixedFatGoalG,
+      cholesterolGoalMg: config.cholesterolGoalMg,
+      saturatedFatGoalG: config.saturatedFatGoalG,
+      sugarGoalG: config.sugarGoalG,
+      sodiumGoalMg: config.sodiumGoalMg,
     );
   }
 
@@ -104,6 +123,20 @@ class GoalSettingsBackup {
     ];
     final shares = _optionalShares(json, 'mealKcalSharesPct');
     final water = _optionalInt(json, 'dailyWaterGoalMl');
+    final fixedKcalGoal = _optionalDouble(json, 'fixedKcalGoal');
+    final fixedFatGoalG = _optionalDouble(json, 'fixedFatGoalG');
+    final cholesterolGoalMg = _optionalDouble(json, 'cholesterolGoalMg');
+    final saturatedFatGoalG = _optionalDouble(json, 'saturatedFatGoalG');
+    final sugarGoalG = _optionalDouble(json, 'sugarGoalG');
+    final sodiumGoalMg = _optionalDouble(json, 'sodiumGoalMg');
+    if ((fixedKcalGoal != null && fixedKcalGoal <= 0) ||
+        (fixedFatGoalG != null && fixedFatGoalG < 0) ||
+        (cholesterolGoalMg != null && cholesterolGoalMg < 0) ||
+        (saturatedFatGoalG != null && saturatedFatGoalG < 0) ||
+        (sugarGoalG != null && sugarGoalG < 0) ||
+        (sodiumGoalMg != null && sodiumGoalMg < 0)) {
+      throw const FormatException('manual nutrient goals are out of range');
+    }
 
     final error =
         _kcalAdjustmentError(kcal) ??
@@ -121,6 +154,12 @@ class GoalSettingsBackup {
           ? null
           : {for (final k in _mealKeys) k: shares[k]!},
       dailyWaterGoalMl: water,
+      fixedKcalGoal: fixedKcalGoal,
+      fixedFatGoalG: fixedFatGoalG,
+      cholesterolGoalMg: cholesterolGoalMg,
+      saturatedFatGoalG: saturatedFatGoalG,
+      sugarGoalG: sugarGoalG,
+      sodiumGoalMg: sodiumGoalMg,
     );
   }
 
@@ -132,6 +171,12 @@ class GoalSettingsBackup {
     'fatGoalPct': fatGoalPct,
     'mealKcalSharesPct': mealKcalSharesPct,
     'dailyWaterGoalMl': dailyWaterGoalMl,
+    if (fixedKcalGoal != null) 'fixedKcalGoal': fixedKcalGoal,
+    if (fixedFatGoalG != null) 'fixedFatGoalG': fixedFatGoalG,
+    if (cholesterolGoalMg != null) 'cholesterolGoalMg': cholesterolGoalMg,
+    if (saturatedFatGoalG != null) 'saturatedFatGoalG': saturatedFatGoalG,
+    if (sugarGoalG != null) 'sugarGoalG': sugarGoalG,
+    if (sodiumGoalMg != null) 'sodiumGoalMg': sodiumGoalMg,
   };
 
   static double? _optionalDouble(Map<String, dynamic> json, String key) {

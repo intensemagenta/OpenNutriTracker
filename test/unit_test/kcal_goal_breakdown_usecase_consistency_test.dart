@@ -152,6 +152,40 @@ void main() {
     expect(breakdown.proteinsFractionGoal, 0.2);
   });
 
+  test(
+    'fixed goals override activity calories and the fat percentage',
+    () async {
+      final userRepo = _FakeUserRepository(user);
+      final activityRepo = _FakeUserActivityRepository(activities);
+      final configRepo = _FakeConfigRepository(
+        const ConfigEntity(
+          false,
+          false,
+          false,
+          AppThemeEntity.system,
+          fixedKcalGoal: 1900,
+          fixedFatGoalG: 52.5,
+          userKcalAdjustment: 120,
+          userFatGoalPct: 0.3,
+        ),
+      );
+      final kcal = GetKcalGoalUsecase(userRepo, configRepo, activityRepo);
+      final macros = GetMacroGoalUsecase(configRepo);
+      final breakdown = await GetKcalGoalBreakdownUsecase(
+        userRepo,
+        configRepo,
+        activityRepo,
+      ).getBreakdown();
+
+      expect(await kcal.getKcalGoal(), 1900);
+      expect(await macros.getFatsGoal(1900), 52.5);
+      expect(breakdown.totalKcalGoal, 1900);
+      expect(breakdown.fatsGoalGrams, 52.5);
+      expect(breakdown.usesFixedKcalGoal, isTrue);
+      expect(breakdown.usesFixedFatGoal, isTrue);
+    },
+  );
+
   test('breakdown user snapshot mirrors the stored profile', () async {
     final breakdown = await breakdownUsecase.getBreakdown();
 

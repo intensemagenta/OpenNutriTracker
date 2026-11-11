@@ -175,6 +175,8 @@ Future<int> reconcileTrackedDays(
   Set<String>? previousKeys,
   Map<String, double>? creditedBurned,
   TrackedDayGoals? currentGoals,
+  bool fixedCalories = false,
+  bool fixedFat = false,
 }) {
   final rows = db.trackedDayBox;
   final listed = _listedDays(db, offsetMinutes);
@@ -211,6 +213,8 @@ Future<int> reconcileTrackedDays(
       existing,
       burnedOn,
       currentGoals,
+      fixedCalories: fixedCalories,
+      fixedFat: fixedFat,
     );
     if (row == null) {
       _log.warning('No goal to create the tracked day of $key from');
@@ -236,15 +240,20 @@ Future<int> reconcileTrackedDays(
       changed = true;
     }
     final burnedMoved = day.burned - burnedOn(key);
-    if (movesCredit && burnedMoved.abs() > _epsilon) {
+    if (movesCredit &&
+        row.fixedCalories != true &&
+        burnedMoved.abs() > _epsilon) {
       row
         ..calorieGoal += burnedMoved
         ..carbsGoal =
             (row.carbsGoal ?? 0) + MacroCalc.getTotalCarbsGoal(burnedMoved)
-        ..fatGoal = (row.fatGoal ?? 0) + MacroCalc.getTotalFatsGoal(burnedMoved)
         ..proteinGoal =
             (row.proteinGoal ?? 0) +
             MacroCalc.getTotalProteinsGoal(burnedMoved);
+      if (row.fixedFat != true) {
+        row.fatGoal =
+            (row.fatGoal ?? 0) + MacroCalc.getTotalFatsGoal(burnedMoved);
+      }
       changed = true;
     }
     if (changed) written[key] = row;
@@ -262,8 +271,10 @@ TrackedDayDBO? _newRow(
   _ListedDay day,
   Map<dynamic, TrackedDayDBO> rows,
   double Function(String key) burnedOn,
-  TrackedDayGoals? currentGoals,
-) {
+  TrackedDayGoals? currentGoals, {
+  required bool fixedCalories,
+  required bool fixedFat,
+}) {
   // Counted in calendar days, not hours: the keys parse to local
   // midnights, and across a daylight-saving change two of those are 23 or
   // 25 hours apart, which would break the tie between rows a day either
@@ -290,13 +301,17 @@ TrackedDayDBO? _newRow(
   final nearest = nearestKey == null ? null : rows[nearestKey];
   TrackedDayGoals? base = currentGoals;
   if (nearest != null) {
-    final burned = burnedOn(nearestKey!);
+    fixedCalories = nearest.fixedCalories == true;
+    fixedFat = nearest.fixedFat == true;
+    final burned = fixedCalories ? 0.0 : burnedOn(nearestKey!);
     double? less(double? goal, double amount) =>
         goal == null ? null : goal - amount;
     base = (
       kcal: nearest.calorieGoal - burned,
       carbs: less(nearest.carbsGoal, MacroCalc.getTotalCarbsGoal(burned)),
-      fat: less(nearest.fatGoal, MacroCalc.getTotalFatsGoal(burned)),
+      fat: fixedFat
+          ? nearest.fatGoal
+          : less(nearest.fatGoal, MacroCalc.getTotalFatsGoal(burned)),
       protein: less(
         nearest.proteinGoal,
         MacroCalc.getTotalProteinsGoal(burned),
@@ -307,15 +322,23 @@ TrackedDayDBO? _newRow(
 
   double? more(double? goal, double amount) =>
       goal == null ? null : goal + amount;
+  final creditedBurn = fixedCalories ? 0.0 : day.burned;
   return TrackedDayDBO(
     day: date,
-    calorieGoal: base.kcal + day.burned,
+    fixedCalories: fixedCalories ? true : null,
+    fixedFat: fixedFat ? true : null,
+    calorieGoal: base.kcal + creditedBurn,
     caloriesTracked: day.kcal,
-    carbsGoal: more(base.carbs, MacroCalc.getTotalCarbsGoal(day.burned)),
+    carbsGoal: more(base.carbs, MacroCalc.getTotalCarbsGoal(creditedBurn)),
     carbsTracked: day.carbs,
-    fatGoal: more(base.fat, MacroCalc.getTotalFatsGoal(day.burned)),
+    fatGoal: fixedFat
+        ? base.fat
+        : more(base.fat, MacroCalc.getTotalFatsGoal(creditedBurn)),
     fatTracked: day.fat,
-    proteinGoal: more(base.protein, MacroCalc.getTotalProteinsGoal(day.burned)),
+    proteinGoal: more(
+      base.protein,
+      MacroCalc.getTotalProteinsGoal(creditedBurn),
+    ),
     proteinTracked: day.protein,
     fibreGoal: nearest?.fibreGoal,
     satFatGoal: nearest?.satFatGoal,
@@ -379,7 +402,8 @@ Future<int> ensureTrackedDaysMatchEntries(
   }
   final changed = await withTrackedDayLock(() async {
     final offset = _offsetMinutesNow(configDataSource);
-    final recordedBy = configDataSource.getConfigNow().trackedDaysOffsetMinutes;
+    final config = configDataSource.getConfigNow();
+    final recordedBy = config.trackedDaysOffsetMinutes;
     final keyedBy = recordedBy ?? 0;
     final rowsWritten = reconcileTrackedDays(
       db,
@@ -387,6 +411,8 @@ Future<int> ensureTrackedDaysMatchEntries(
       previousOffsetMinutes: keyedBy,
       previousImportOffsetMinutes: recordedBy == null ? offset : null,
       currentGoals: goals,
+      fixedCalories: config.fixedKcalGoal != null,
+      fixedFat: config.fixedFatGoalG != null,
     );
     final recorded = recordedBy == offset
         ? null

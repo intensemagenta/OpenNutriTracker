@@ -11,7 +11,9 @@ class TrackedDayDataSource {
   final log = Logger('TrackedDayDataSource');
   final HiveDBProvider _db;
 
-  TrackedDayDataSource(this._db);
+  final ConfigDataSource? _config;
+
+  TrackedDayDataSource(this._db, {ConfigDataSource? config}) : _config = config;
 
   Box<TrackedDayDBO> get _trackedDayBox => _db.trackedDayBox;
 
@@ -33,10 +35,20 @@ class TrackedDayDataSource {
     return DayBoundaryCalc.dayLabelOf(day, config.dayStartOffsetTotalMinutes);
   }
 
+  void _recordFixedGoals(TrackedDayDBO row) {
+    final config = _config?.getConfigNow();
+    row.fixedCalories = config?.fixedKcalGoal == null ? null : true;
+    row.fixedFat = config?.fixedFatGoalG == null ? null : true;
+    row.satFatGoal ??= config?.saturatedFatGoalG;
+    row.sugarsGoal ??= config?.sugarGoalG;
+    row.sodiumGoal ??= config?.sodiumGoalMg;
+  }
+
   Future<void> saveTrackedDay(TrackedDayDBO trackedDayDBO) async {
     log.fine('Updating tracked day in db');
     // Stored as the label too: the Diary calendar keys its map by `day`.
     trackedDayDBO.day = await _diaryDayOf(trackedDayDBO.day);
+    _recordFixedGoals(trackedDayDBO);
     await _trackedDayBox.put(trackedDayDBO.day.toParsedDay(), trackedDayDBO);
   }
 
@@ -66,6 +78,7 @@ class TrackedDayDataSource {
     trackedDayDBO.day = await _diaryDayOf(trackedDayDBO.day);
     final key = trackedDayDBO.day.toParsedDay();
     if (_trackedDayBox.containsKey(key)) return false;
+    _recordFixedGoals(trackedDayDBO);
     log.fine('Creating tracked day in db');
     await _trackedDayBox.put(key, trackedDayDBO);
     return true;
@@ -101,6 +114,10 @@ class TrackedDayDataSource {
 
     if (updateDay != null) {
       updateDay.calorieGoal = calorieGoal;
+      updateDay.fixedCalories =
+          _config?.getConfigNow().fixedKcalGoal == null
+          ? null
+          : true;
       await updateDay.save();
     }
   }
@@ -109,7 +126,7 @@ class TrackedDayDataSource {
     log.fine('Increasing tracked day total calories');
     final updateDay = await getTrackedDay(day);
 
-    if (updateDay != null) {
+    if (updateDay != null && updateDay.fixedCalories != true) {
       updateDay.calorieGoal += amount;
       await updateDay.save();
     }
@@ -119,7 +136,7 @@ class TrackedDayDataSource {
     log.fine('Reducing tracked day total calories');
     final updateDay = await getTrackedDay(day);
 
-    if (updateDay != null) {
+    if (updateDay != null && updateDay.fixedCalories != true) {
       updateDay.calorieGoal -= amount;
       await updateDay.save();
     }
@@ -164,6 +181,10 @@ class TrackedDayDataSource {
       }
       if (fatGoal != null) {
         updateDay.fatGoal = fatGoal;
+        updateDay.fixedFat =
+            _config?.getConfigNow().fixedFatGoalG == null
+            ? null
+            : true;
       }
       if (proteinGoal != null) {
         updateDay.proteinGoal = proteinGoal;
@@ -182,13 +203,15 @@ class TrackedDayDataSource {
     final updateDay = await getTrackedDay(day);
 
     if (updateDay != null) {
-      if (carbsAmount != null) {
+      if (carbsAmount != null && updateDay.fixedCalories != true) {
         updateDay.carbsGoal = (updateDay.carbsGoal ?? 0) + carbsAmount;
       }
-      if (fatAmount != null) {
+      if (fatAmount != null &&
+          updateDay.fixedCalories != true &&
+          updateDay.fixedFat != true) {
         updateDay.fatGoal = (updateDay.fatGoal ?? 0) + fatAmount;
       }
-      if (proteinAmount != null) {
+      if (proteinAmount != null && updateDay.fixedCalories != true) {
         updateDay.proteinGoal = (updateDay.proteinGoal ?? 0) + proteinAmount;
       }
       await updateDay.save();
@@ -205,13 +228,15 @@ class TrackedDayDataSource {
     final updateDay = await getTrackedDay(day);
 
     if (updateDay != null) {
-      if (carbsAmount != null) {
+      if (carbsAmount != null && updateDay.fixedCalories != true) {
         updateDay.carbsGoal = (updateDay.carbsGoal ?? 0) - carbsAmount;
       }
-      if (fatAmount != null) {
+      if (fatAmount != null &&
+          updateDay.fixedCalories != true &&
+          updateDay.fixedFat != true) {
         updateDay.fatGoal = (updateDay.fatGoal ?? 0) - fatAmount;
       }
-      if (proteinAmount != null) {
+      if (proteinAmount != null && updateDay.fixedCalories != true) {
         updateDay.proteinGoal = (updateDay.proteinGoal ?? 0) - proteinAmount;
       }
       await updateDay.save();

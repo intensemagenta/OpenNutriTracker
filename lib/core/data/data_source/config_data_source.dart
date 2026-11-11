@@ -51,6 +51,12 @@ class ConfigDataSource {
     final merged = app != null
         ? ConfigDBO.fromJson(app.toJson())
         : ConfigDBO.empty();
+    merged.fixedKcalGoal = profile?.fixedKcalGoal;
+    merged.fixedFatGoalG = profile?.fixedFatGoalG;
+    merged.cholesterolGoalMg = profile?.cholesterolGoalMg;
+    merged.saturatedFatGoalG = profile?.saturatedFatGoalG;
+    merged.sugarGoalG = profile?.sugarGoalG;
+    merged.sodiumGoalMg = profile?.sodiumGoalMg;
     if (profile != null) {
       merged.userKcalAdjustment = profile.userKcalAdjustment;
       merged.userCarbGoalPct = profile.userCarbGoalPct;
@@ -195,6 +201,24 @@ class ConfigDataSource {
 
   Future<double> getKcalAdjustment() async =>
       _readMerged().userKcalAdjustment ?? 0;
+
+  Future<void> setManualNutrientGoals({
+    required double? fixedKcalGoal,
+    required double? fixedFatGoalG,
+    required double? cholesterolGoalMg,
+    double? saturatedFatGoalG,
+    double? sugarGoalG,
+    double? sodiumGoalMg,
+  }) {
+    return _update((config) {
+      config.fixedKcalGoal = fixedKcalGoal;
+      config.fixedFatGoalG = fixedFatGoalG;
+      config.cholesterolGoalMg = cholesterolGoalMg;
+      config.saturatedFatGoalG = saturatedFatGoalG;
+      config.sugarGoalG = sugarGoalG;
+      config.sodiumGoalMg = sodiumGoalMg;
+    });
+  }
 
   Future<void> setConfigKcalAdjustment(double kcalAdjustment) async {
     await _update((c) => c.userKcalAdjustment = kcalAdjustment);
@@ -377,6 +401,12 @@ class ConfigDataSource {
     required double? fatGoalPct,
     required Map<String, int>? mealKcalSharesPct,
     required int? dailyWaterGoalMl,
+    double? fixedKcalGoal,
+    double? fixedFatGoalG,
+    double? cholesterolGoalMg,
+    double? saturatedFatGoalG,
+    double? sugarGoalG,
+    double? sodiumGoalMg,
   }) async {
     await _update((c) {
       c.userKcalAdjustment = kcalAdjustment;
@@ -387,6 +417,12 @@ class ConfigDataSource {
           ? null
           : Map<String, int>.from(mealKcalSharesPct);
       c.dailyWaterGoalMl = dailyWaterGoalMl;
+      c.fixedKcalGoal = fixedKcalGoal;
+      c.fixedFatGoalG = fixedFatGoalG;
+      c.cholesterolGoalMg = cholesterolGoalMg;
+      c.saturatedFatGoalG = saturatedFatGoalG;
+      c.sugarGoalG = sugarGoalG;
+      c.sodiumGoalMg = sodiumGoalMg;
     });
   }
 

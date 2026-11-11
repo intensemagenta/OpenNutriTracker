@@ -203,6 +203,12 @@ class ImportDataUsecase {
           fatGoalPct: goalSettings.fatGoalPct,
           mealKcalSharesPct: goalSettings.mealKcalSharesPct,
           dailyWaterGoalMl: goalSettings.dailyWaterGoalMl,
+          fixedKcalGoal: goalSettings.fixedKcalGoal,
+          fixedFatGoalG: goalSettings.fixedFatGoalG,
+          cholesterolGoalMg: goalSettings.cholesterolGoalMg,
+          saturatedFatGoalG: goalSettings.saturatedFatGoalG,
+          sugarGoalG: goalSettings.sugarGoalG,
+          sodiumGoalMg: goalSettings.sodiumGoalMg,
         );
       }
 
