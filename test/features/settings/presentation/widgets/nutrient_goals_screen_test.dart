@@ -12,8 +12,9 @@ import 'package:opennutritracker/generated/l10n.dart';
 
 import '../../../../fixture/user_entity_fixtures.dart';
 import '../../../../helpers/test_l10n.dart';
+import '../../../../helpers/nutrient_goals_settings_fake.dart';
 
-class _FakeSettingsBloc extends Fake implements SettingsBloc {
+class _FakeSettingsBloc extends NutrientGoalsSettingsFake {
   int updateTrackedDayCalls = 0;
   int setNutrientGoalsCalls = 0;
   double? savedFibre;
@@ -143,11 +144,10 @@ void main() {
     final settingsBloc = _FakeSettingsBloc();
     await openScreen(tester, settingsBloc);
 
-    // Rows run fibre, saturated fat, sugars, sodium, calcium, iron: the
-    // first is a whole-number field, the sixth a decimal one.
+    // After the fixed goals, fibre is a whole-number row and iron is decimal.
     final fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), '32');
-    await tester.enterText(fields.at(5), '12.5');
+    await tester.enterText(fields.at(3), '32');
+    await tester.enterText(fields.at(8), '12.5');
 
     await tester.tap(find.text(l10nEn.buttonSaveLabel));
     await tester.pumpAndSettle();
@@ -171,7 +171,7 @@ void main() {
       final settingsBloc = _FakeSettingsBloc();
       await openScreen(tester, settingsBloc);
 
-      await tester.enterText(find.byType(TextField).at(0), '32');
+      await tester.enterText(find.byType(TextField).at(3), '32');
       await tapSave(tester);
 
       expect(settingsBloc.setNutrientGoalsCalls, 1);
@@ -204,7 +204,7 @@ void main() {
       // The field reopens as the stored "12.5" (#1444); Save must leave
       // iron alone when only fibre was edited.
       expect(find.widgetWithText(TextField, '12.5'), findsOneWidget);
-      await tester.enterText(find.byType(TextField).at(0), '32');
+      await tester.enterText(find.byType(TextField).at(3), '32');
       await tapSave(tester);
 
       expect(settingsBloc.savedFibre, 32);
@@ -248,7 +248,7 @@ void main() {
       final settingsBloc = _FakeSettingsBloc();
       await openScreen(tester, settingsBloc);
 
-      await tester.enterText(find.byType(TextField).at(0), '32');
+      await tester.enterText(find.byType(TextField).at(3), '32');
       await tester.tap(find.text(l10nEn.buttonResetLabel));
       await tester.pumpAndSettle();
       await tapSave(tester);
@@ -290,14 +290,14 @@ void main() {
     final settingsBloc = _FakeSettingsBloc();
     await openScreen(tester, settingsBloc);
 
-    final fibre = find.byType(TextField).at(0);
+    final fibre = find.byType(TextField).at(3);
     await tester.tap(fibre);
     await tester.enterText(fibre, '32');
     await tester.pump();
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pump();
 
-    expect(tester.widget<Slider>(find.byType(Slider).at(0)).value, 32);
+    expect(tester.widget<Slider>(find.byType(Slider).first).value, 32);
   });
 
   testWidgets('an unedited field applies nothing when it loses focus', (
@@ -306,7 +306,7 @@ void main() {
     final settingsBloc = _FakeSettingsBloc();
     await openScreen(tester, settingsBloc);
 
-    await tester.tap(find.byType(TextField).at(5));
+    await tester.tap(find.byType(TextField).at(8));
     await tester.pump();
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pump();

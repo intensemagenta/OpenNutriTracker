@@ -12,8 +12,9 @@ import 'package:opennutritracker/generated/l10n.dart';
 
 import '../../../../fixture/user_entity_fixtures.dart';
 import '../../../../helpers/test_l10n.dart';
+import '../../../../helpers/nutrient_goals_settings_fake.dart';
 
-class _FakeSettingsBloc extends Fake implements SettingsBloc {
+class _FakeSettingsBloc extends NutrientGoalsSettingsFake {
   double? savedSodium;
   double? savedIron;
   double? savedVitaminB12;
@@ -72,11 +73,10 @@ class _FakeCalendarDayBloc extends Fake implements CalendarDayBloc {
   void add(CalendarDayEvent event) {}
 }
 
-// Rows run fibre, saturated fat, sugars, sodium, calcium, iron, potassium,
-// magnesium, vitamin D, vitamin B12.
-const _sodium = 3;
-const _iron = 5;
-const _vitaminB12 = 9;
+// Fixed calorie, fat and cholesterol fields precede the nutrient rows.
+const _sodium = 6;
+const _iron = 8;
+const _vitaminB12 = 12;
 
 void main() {
   Future<void> openScreen(
@@ -123,6 +123,21 @@ void main() {
     await tester.tap(find.text(l10nEn.buttonSaveLabel));
     await tester.pumpAndSettle();
   }
+
+  testWidgets('saves fixed goals without submitting the keyboard', (tester) async {
+    final settingsBloc = _FakeSettingsBloc();
+    await openScreen(tester, settingsBloc);
+
+    await tester.enterText(field(0), '1900');
+    await tester.enterText(field(1), '52,5');
+    await tester.enterText(field(2), '180');
+    await tester.tap(find.text(l10nEn.buttonSaveLabel));
+    await tester.pumpAndSettle();
+
+    expect(settingsBloc.savedCalories, 1900);
+    expect(settingsBloc.savedFat, 52.5);
+    expect(settingsBloc.savedCholesterol, 180);
+  });
 
   // #1387: comma-decimal keyboards (de, fr, pl, …) emit "," and the field
   // used to drop it, so "12,5" became "125" and was clamped to 30 mg.

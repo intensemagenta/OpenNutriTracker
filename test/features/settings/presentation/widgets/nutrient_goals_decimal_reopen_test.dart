@@ -21,8 +21,9 @@ import 'package:opennutritracker/features/settings/presentation/widgets/nutrient
 import 'package:opennutritracker/generated/l10n.dart';
 
 import '../../../../fixture/user_entity_fixtures.dart';
+import '../../../../helpers/nutrient_goals_settings_fake.dart';
 
-class _FakeSettingsBloc extends Fake implements SettingsBloc {
+class _FakeSettingsBloc extends NutrientGoalsSettingsFake {
   _FakeSettingsBloc(this._stored);
 
   final TrackedDayEntity? _stored;
@@ -63,8 +64,8 @@ class _FakeCalendarDayBloc extends Fake implements CalendarDayBloc {
 
 // Rows: fibre, satFat, sugars, sodium, calcium, iron, potassium, magnesium,
 // vitamin D, vitamin B12.
-const _iron = 5;
-const _magnesium = 7;
+const _iron = 8;
+const _magnesium = 10;
 
 void main() {
   Future<void> openScreen(

@@ -30,6 +30,7 @@ import 'package:provider/provider.dart';
 import '../../../../fixture/user_entity_fixtures.dart';
 import '../../../../helpers/fake_reload_blocs.dart';
 import '../../../../helpers/test_l10n.dart';
+import '../../../../helpers/nutrient_goals_settings_fake.dart';
 
 /// #1360: with "Day starts at" later than the current time, today is
 /// yesterday's date. Goal edits have to land on that day — the one Home
@@ -40,7 +41,7 @@ import '../../../../helpers/test_l10n.dart';
 final _now = DateTime(2026, 10, 11, 20, 40);
 final _logicalDay = DateTime(2026, 10, 10);
 
-class _FakeSettingsBloc extends Fake implements SettingsBloc {
+class _FakeSettingsBloc extends NutrientGoalsSettingsFake {
   final List<DateTime> trackedDayUpdates = [];
   final List<DateTime> trackedDayReads = [];
   final List<DateTime> nutrientGoalWrites = [];

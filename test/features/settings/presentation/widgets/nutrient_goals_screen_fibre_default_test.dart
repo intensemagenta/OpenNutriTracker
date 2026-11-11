@@ -12,12 +12,13 @@ import 'package:opennutritracker/features/profile/presentation/bloc/profile_bloc
 import 'package:opennutritracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:opennutritracker/features/settings/presentation/widgets/nutrient_goals_screen.dart';
 import 'package:opennutritracker/generated/l10n.dart';
+import '../../../../helpers/nutrient_goals_settings_fake.dart';
 
 // #1365: with no fibre goal set, Settings -> Nutrient goals must open at
 // the same fibre reference the Diary panel applies (the IOM value for the
 // user's age and gender), not a flat 30 g.
 
-class _FakeSettingsBloc extends Fake implements SettingsBloc {
+class _FakeSettingsBloc extends NutrientGoalsSettingsFake {
   TrackedDayEntity? today;
 
   /// The fibre goal handed to the last Save; null until one happens.
@@ -127,14 +128,14 @@ Future<void> _open(
 
 /// Types [text] into the fibre field and presses Done, as a user would.
 Future<void> _typeFibre(WidgetTester tester, String text) async {
-  await tester.enterText(find.byType(TextField).first, text);
+  await tester.enterText(find.byType(TextField).at(3), text);
   await tester.testTextInput.receiveAction(TextInputAction.done);
   await tester.pumpAndSettle();
 }
 
-/// Fibre is the first row: its text field and slider come first.
+/// Fibre is the first slider row, after the three fixed-goal fields.
 String _fibreText(WidgetTester tester) =>
-    tester.widget<TextField>(find.byType(TextField).first).controller!.text;
+    tester.widget<TextField>(find.byType(TextField).at(3)).controller!.text;
 
 double _fibreSlider(WidgetTester tester) =>
     tester.widget<Slider>(find.byType(Slider).first).value;
@@ -176,7 +177,7 @@ void main() {
   ) async {
     await _open(tester, user: _user(30, UserGenderEntity.nonBinary));
 
-    await tester.tap(find.byType(TextField).first);
+    await tester.tap(find.byType(TextField).at(3));
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
